@@ -1,0 +1,77 @@
+.logoProduccion img {
+  width: 20%;
+}
+
+@media screen and (max-width: 768px) {
+  .logoProduccion img {
+    width: 60%;
+  }
+}
+
+.logoProduccion {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  max-width: 100%;
+}
+
+.apartados {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 5px 0;
+}
+
+.apartado {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 22vh; /* Ancho fijo para los apartados */
+  margin: 5px; /* Espacio fijo entre apartados */
+}
+
+.apartado label {
+  font-size: 13px;
+  margin-bottom: 5px;
+  background-color: #124d83;
+  width: 100%;
+  color: white;
+  height: 40px;
+  border-radius: 5px;
+  display: flex;
+  text-align: center;
+  align-items: center;
+  justify-content: center;
+}
+
+.inputApartado {
+  width: 90%;
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-top: 5px;
+  height: 30px;
+  margin-bottom: -13px;
+}
+.button-container {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.add-row-button,
+.remove-row-button {
+  padding: 10px 20px;
+  background-color: #124d83;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.add-row-button:hover,
+.remove-row-button:hover {
+  background-color: #0a3459;
+}

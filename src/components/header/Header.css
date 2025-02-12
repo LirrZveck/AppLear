@@ -1,0 +1,15 @@
+.container-header {
+  width: 100%;
+  background-color: #124d83;
+  height: 40px;
+  position: relative;
+  display: flex;
+  justify-content: end;
+}
+
+.container-header svg {
+  height: 36px;
+  /* fill: white; */
+  /* margin-left: 20px; */
+  cursor: pointer;
+}
