@@ -1,0 +1,69 @@
+.datos-seleccionados {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.celda {
+  color: black;
+  font-family: "Lato", sans-serif !important;
+  text-align: center;
+  border: none;
+  padding: 10px;
+  box-sizing: border-box;
+  flex: 1;
+  min-width: 80px;
+}
+
+.col-1 {
+  background-color: #b4c6d7;
+}
+
+.col-2 {
+  background-color: #ddeaf6;
+}
+
+.fila {
+  display: flex;
+  justify-content: center;
+  flex-wrap: nowrap;
+  margin: 5px 0;
+  background-color: #124d83;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.celda-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  font-size: 13px;
+  margin: 5px;
+  color: white;
+  min-width: 80px;
+}
+
+@media (max-width: 768px) {
+  .fila {
+    flex-wrap: wrap;
+  }
+
+  .celda,
+  .celda-header {
+    flex: 1 1 100%;
+    min-width: 100%;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .celda,
+  .celda-header {
+    flex: 1;
+    min-width: calc(50% - 10px);
+  }
+}

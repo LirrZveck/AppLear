@@ -5,6 +5,7 @@ import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Nuevaproduccion from "./components/nuevaproduccion/Nuevaproduccion";
 import Produccionpendiente from "./components/produccionpendiente/Produccionpendiente";
 import Informes from "./components/informes/Informes";
+import Inicioproduccion from "./components/nuevaproduccion/inicioproduccion/Inicioproduccion";
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         <Route path="/nuevaproduccion" element={<Nuevaproduccion />} />
         <Route path="/produccionpendiente" element={<Produccionpendiente />} />
         <Route path="/informes" element={<Informes />} />
+        <Route path="/Inicioproduccion" element={<Inicioproduccion />} />
       </Routes>
     </Router>
   );
