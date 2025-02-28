@@ -1,0 +1,178 @@
+{
+  "StockMovements": [
+    {
+      "messageID": "MSG001",
+      "messageDate": "2023-04-06T10:00:00Z",
+      "messageType": "TypeA",
+      "messageUserID": "User123",
+      "movementOrder": {
+        "LogisticsCenter": "LC001"
+      },
+      "items": [
+        {
+          "productCode": "P001",
+          "lot": "L001",
+          "description": "Producto 1",
+          "quantity": 100,
+          "expiredDate": "2024-12-31T00:00:00Z",
+          "cum": "CUM001",
+          "warehouse": "WH001"
+        },
+        {
+          "productCode": "P002",
+          "lot": "L002",
+          "description": "Producto 2",
+          "quantity": 200,
+          "expiredDate": "2025-06-30T00:00:00Z",
+          "cum": "CUM002",
+          "warehouse": "WH002"
+        }
+      ]
+    },
+    {
+      "messageID": "MSG002",
+      "messageDate": "2023-05-15T15:30:00Z",
+      "messageType": "TypeB",
+      "messageUserID": "User456",
+      "movementOrder": {
+        "LogisticsCenter": "LC002"
+      },
+      "items": [
+        {
+          "productCode": "P003",
+          "lot": "L003",
+          "description": "Producto 3",
+          "quantity": 150,
+          "expiredDate": "2024-11-30T00:00:00Z",
+          "cum": "CUM003",
+          "warehouse": "WH003"
+        },
+        {
+          "productCode": "P004",
+          "lot": "L004",
+          "description": "Producto 4",
+          "quantity": 300,
+          "expiredDate": "2025-03-31T00:00:00Z",
+          "cum": "CUM004",
+          "warehouse": "WH004"
+        }
+      ]
+    },
+    {
+      "messageID": "MSG003",
+      "messageDate": "2023-06-20T08:15:00Z",
+      "messageType": "TypeC",
+      "messageUserID": "User789",
+      "movementOrder": {
+        "LogisticsCenter": "LC003"
+      },
+      "items": [
+        {
+          "productCode": "P005",
+          "lot": "L005",
+          "description": "Producto 5",
+          "quantity": 250,
+          "expiredDate": "2023-10-15T00:00:00Z",
+          "cum": "CUM005",
+          "warehouse": "WH005"
+        },
+        {
+          "productCode": "P006",
+          "lot": "L006",
+          "description": "Producto 6",
+          "quantity": 350,
+          "expiredDate": "2024-05-20T00:00:00Z",
+          "cum": "CUM006",
+          "warehouse": "WH006"
+        }
+      ]
+    },
+    {
+      "messageID": "MSG004",
+      "messageDate": "2023-07-10T12:00:00Z",
+      "messageType": "TypeD",
+      "messageUserID": "User101",
+      "movementOrder": {
+        "LogisticsCenter": "LC004"
+      },
+      "items": [
+        {
+          "productCode": "P007",
+          "lot": "L007",
+          "description": "Producto 7",
+          "quantity": 400,
+          "expiredDate": "2023-09-25T00:00:00Z",
+          "cum": "CUM007",
+          "warehouse": "WH007"
+        },
+        {
+          "productCode": "P008",
+          "lot": "L008",
+          "description": "Producto 8",
+          "quantity": 500,
+          "expiredDate": "2024-04-10T00:00:00Z",
+          "cum": "CUM008",
+          "warehouse": "WH008"
+        }
+      ]
+    },
+    {
+      "messageID": "MSG005",
+      "messageDate": "2023-08-05T14:45:00Z",
+      "messageType": "TypeE",
+      "messageUserID": "User202",
+      "movementOrder": {
+        "LogisticsCenter": "LC005"
+      },
+      "items": [
+        {
+          "productCode": "P009",
+          "lot": "L009",
+          "description": "Producto 9",
+          "quantity": 600,
+          "expiredDate": "2023-12-05T00:00:00Z",
+          "cum": "CUM009",
+          "warehouse": "WH009"
+        },
+        {
+          "productCode": "P010",
+          "lot": "L010",
+          "description": "Producto 10",
+          "quantity": 700,
+          "expiredDate": "2024-08-30T00:00:00Z",
+          "cum": "CUM010",
+          "warehouse": "WH010"
+        }
+      ]
+    },
+    {
+      "messageID": "MSG006",
+      "messageDate": "2023-09-12T09:00:00Z",
+      "messageType": "TypeF",
+      "messageUserID": "User303",
+      "movementOrder": {
+        "LogisticsCenter": "LC006"
+      },
+      "items": [
+        {
+          "productCode": "P011",
+          "lot": "L011",
+          "description": "Producto 11",
+          "quantity": 800,
+          "expiredDate": "2025-01-20T00:00:00Z",
+          "cum": "CUM011",
+          "warehouse": "WH011"
+        },
+        {
+          "productCode": "P012",
+          "lot": "L012",
+          "description": "Producto 12",
+          "quantity": 900,
+          "expiredDate": "2025-07-15T00:00:00Z",
+          "cum": "CUM012",
+          "warehouse": "WH012"
+        }
+      ]
+    }
+  ]
+}

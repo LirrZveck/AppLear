@@ -67,3 +67,23 @@
     min-width: calc(50% - 10px);
   }
 }
+
+.celda.col-3.contador {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.celda.col-3.contador button {
+  width: 30px;
+  height: 30px;
+  background-color: #124d83;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.celda.col-3.contador input {
+  width: 50px;
+  text-align: center;
+}

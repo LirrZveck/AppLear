@@ -1,0 +1,153 @@
+/*CSS NUEVO*/
+
+.input-group-cantidades {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 50px;
+  text-align: center;
+}
+
+.input-item {
+  margin: 20px;
+  text-align: center;
+  align-items: center;
+  display: flex;
+}
+.input-item label {
+  width: 200px;
+  background-color: #124d83;
+  height: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+}
+.input-item input {
+  width: 200px;
+  background-color: #ddeaf6;
+  height: 40px;
+  text-align: center;
+  border: none;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+/*CSS ANTIGUO*/
+.produccion-tablas {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.tabla {
+  border: 1px solid #ccc;
+  padding: 10px;
+  border-radius: 5px;
+}
+.tabla h3 {
+  margin-left: 10px;
+}
+.celda-header {
+  font-weight: bold;
+  padding: 5px;
+  text-align: left;
+}
+
+/* From Uiverse.io by andrew-demchenk0 */
+.botondescargarfinalproduccion {
+  position: relative;
+  width: 150px;
+  height: 40px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  border: 1px solid #6d8194;
+  background-color: #124d83;
+  overflow: hidden;
+}
+.contenedor-botones-descargar-home-finalproduccion {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 40px;
+  margin-bottom: 20px;
+  gap: 10px;
+}
+.botondescargarfinalproduccion,
+.botondescargarfinalproduccion__icon,
+.botondescargarfinalproduccion__text {
+  transition: all 0.3s;
+}
+
+.botondescargarfinalproduccion .botondescargarfinalproduccion__text {
+  transform: translateX(22px);
+  color: #fff;
+}
+
+.botondescargarfinalproduccion .botondescargarfinalproduccion__icon {
+  position: absolute;
+  transform: translateX(109px);
+  height: 100%;
+  width: 39px;
+  background-color: #124d83;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.botondescargarfinalproduccion .svg {
+  width: 20px;
+  fill: #fff;
+}
+
+.botondescargarfinalproduccion:hover {
+  background: #4246a9;
+}
+
+.botondescargarfinalproduccion:hover .botondescargarfinalproduccion__text {
+  color: transparent;
+}
+
+.botondescargarfinalproduccion:hover .botondescargarfinalproduccion__icon {
+  width: 148px;
+  transform: translateX(0);
+}
+
+.botondescargarfinalproduccion:active .botondescargarfinalproduccion__icon {
+  background-color: #ffffff;
+}
+
+.botondescargarfinalproduccion:active {
+  border: 1px solid #146c54;
+}
+
+.botonVolverHomeFinal {
+  display: flex;
+  height: 3em;
+  width: 150px;
+  align-items: center;
+  justify-content: center;
+  background-color: #c40c0c4b;
+  border-radius: 3px;
+
+  transition: all 0.2s linear;
+  cursor: pointer;
+  border: none;
+  background: #124d83;
+  color: white;
+}
+
+.botonVolverHomeFinal > svg {
+  margin-right: 5px;
+  margin-left: 5px;
+  font-size: 20px;
+  transition: all 0.4s ease-in;
+  color: white;
+}
+
+.botonVolverHomeFinal:hover > svg {
+  font-size: 1.2em;
+  transform: translateX(-5px);
+}

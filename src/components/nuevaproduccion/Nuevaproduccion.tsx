@@ -1,12 +1,13 @@
-import Header from "../header/Header";
 import "./Nuevaproduccion.css";
 import logoAlercoProduccion from "../images/Alear_Logo-1-1-1-1.png";
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from "react";
+import Header from "../header/Header";
+import stockData from "./Nuevaproduccion.json";
+import { useNavigate, useLocation } from "react-router-dom";
 
 interface StockMovement {
   messageID: string;
-  messageDate: Date;
+  messageDate: string;
   messageType: string;
   messageUserID: string;
   movementOrder: {
@@ -20,80 +21,35 @@ interface Item {
   lot: string;
   description: string;
   quantity: number;
-  expiredDate: Date;
+  expiredDate: string;
   cum: string;
   warehouse: string;
 }
 
 const Nuevaproduccion = () => {
-  const navigateHomePro = useNavigate();
-  const navigateInicioProduccion = useNavigate();
-
-  const handleClickHomePro = () => {
-    navigateHomePro("/");
-  };
-
+  const location = useLocation();
   const [showPopup, setShowPopup] = useState(false);
-  const [showValidationPopup, setShowValidationPopup] = useState(false);
-  const [rows, setRows] = useState<number>(1);
-  const [data, setData] = useState<Item[]>([]);
-  const [formData, setFormData] = useState<string[][]>([Array(8).fill(" ")]);
-  const examples = [" ", "ejemplo 1", "ejemplo 2", "ejemplo 3"];
-
-  useEffect(() => {
-    const storedRows = localStorage.getItem("rows");
-    const storedTimestamp = localStorage.getItem("timestamp");
-    const now = Date.now();
-
-    if (
-      storedRows &&
-      storedTimestamp &&
-      now - parseInt(storedTimestamp, 10) < 20 * 60 * 1000
-    ) {
-      setRows(parseInt(storedRows, 10));
-      setFormData(
-        JSON.parse(
-          localStorage.getItem("formData") ||
-            '[[" ", " ", " ", " ", " ", " ", " ", " "]]'
-        )
-      );
-    }
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem("rows", rows.toString());
-    localStorage.setItem("timestamp", Date.now().toString());
-    localStorage.setItem("formData", JSON.stringify(formData));
-  }, [rows, formData]);
-
-  useEffect(() => {
-    // Simulando la llamada a la API
-    const fetchData = async () => {
-      // Aquí iría la llamada real a la API
-      setData([
-        {
-          productCode: "P001",
-          lot: "L001",
-          description: "Producto 1",
-          quantity: 10,
-          expiredDate: new Date(),
-          cum: "CUM001",
-          warehouse: "W001",
-        },
-        {
-          productCode: "P002",
-          lot: "L002",
-          description: "Producto 2",
-          quantity: 20,
-          expiredDate: new Date(),
-          cum: "CUM002",
-          warehouse: "W002",
-        },
-      ]);
-    };
-
-    fetchData();
-  }, []);
+  const [selectedItems, setSelectedItems] = useState<Item[]>(
+    location.state?.selectedItems || []
+  );
+  const [warningPopup, setWarningPopup] = useState(false);
+  const [showWarning, setShowWarning] = useState(false);
+  const [warningPosition, setWarningPosition] = useState<{
+    top: number;
+    left: number;
+  }>({ top: 0, left: 0 });
+  const navigate = useNavigate();
+  const headers = [
+    "Codigo del producto",
+    "Descripcion",
+    "Lote",
+    "CUM",
+    "Fecha de caducidad",
+    "Cantidad",
+    "Fecha de produccion",
+    "Serial",
+    "Seleccionar",
+  ];
 
   const handleOpenPopup = () => {
     setShowPopup(true);
@@ -103,75 +59,42 @@ const Nuevaproduccion = () => {
     setShowPopup(false);
   };
 
-  const addRow = () => {
-    setRows(rows + 1);
-    setFormData([...formData, Array(8).fill(" ")]);
-  };
-
-  const removeRow = () => {
-    if (rows > 1) {
-      setRows(rows - 1);
-      setFormData(formData.slice(0, -1));
-    }
-  };
-
-  const handleSelectChange = (
-    value: string,
-    rowIndex: number,
-    colIndex: number
+  const handleCheckboxChange = (
+    item: Item,
+    isChecked: boolean,
+    event: React.MouseEvent
   ) => {
-    const updatedFormData = [...formData];
-    updatedFormData[rowIndex][colIndex] = value;
-    setFormData(updatedFormData);
-  };
-
-  const handleContinue = () => {
-    const isAnyOptionSelected = formData.flat().some((value) => value !== " ");
-    const areAllOptionsFilled = formData.flat().every((value) => value !== " ");
-
-    if (!isAnyOptionSelected || (isAnyOptionSelected && !areAllOptionsFilled)) {
-      setShowValidationPopup(true);
+    if (isChecked) {
+      if (selectedItems.length > 0) {
+        const rect = (event.target as HTMLElement).getBoundingClientRect();
+        setWarningPosition({
+          top: rect.top - 30,
+          left: rect.left + rect.width / 2,
+        });
+        setShowWarning(true);
+        setTimeout(() => setShowWarning(false), 4000);
+      } else {
+        setSelectedItems([item]);
+      }
     } else {
-      navigateInicioProduccion("/Inicioproduccion", { state: { formData } });
+      setSelectedItems([]);
     }
   };
 
-  const renderRows = () => {
-    const rowArray = [];
-    for (let i = 0; i < rows; i++) {
-      rowArray.push(
-        <div className="apartados" key={i}>
-          {[
-            "Codigo del producto",
-            "Descripcion",
-            "Lote",
-            "CUM",
-            "Fecha de caducidad",
-            "Cantidad",
-            "Fecha de produccion",
-            "Serial",
-          ].map((titulo, colIndex) => (
-            <div className="apartado" key={colIndex}>
-              {i === 0 && <label>{titulo}</label>}
-              <select
-                className="inputApartado"
-                value={formData[i] ? formData[i][colIndex] : " "}
-                onChange={(e) =>
-                  handleSelectChange(e.target.value, i, colIndex)
-                }
-              >
-                {examples.map((example, exampleIndex) => (
-                  <option key={exampleIndex} value={example}>
-                    {example}
-                  </option>
-                ))}
-              </select>
-            </div>
-          ))}
-        </div>
-      );
+  const handleClickHomePro = () => {
+    navigate("/");
+  };
+
+  const handleConfirmSelection = () => {
+    if (selectedItems.length === 0) {
+      setWarningPopup(true);
+    } else {
+      navigate("/inicioproduccion", { state: { selectedItems } });
     }
-    return rowArray;
+  };
+
+  const handleCloseWarningPopup = () => {
+    setWarningPopup(false);
   };
 
   return (
@@ -182,7 +105,7 @@ const Nuevaproduccion = () => {
       </div>
       <section>
         <div className="titulo-actividad-hacer">
-          <h2>Selecciona los productos y la cantidad que quieras producir</h2>{" "}
+          <h2>Nueva Producción</h2>
           <svg
             width="30"
             height="30"
@@ -206,62 +129,129 @@ const Nuevaproduccion = () => {
               fillRule="evenodd"
               clipRule="evenodd"
             />
-          </svg>{" "}
+          </svg>
         </div>
-        {renderRows()}
-        <div className="button-container">
-          <button className="add-row-button" onClick={addRow}>
+        <div className="datos-seleccionados">
+          <div className="fila">
+            {headers.map((header: string, index: number) => (
+              <div key={index} className="celda-header">
+                {header}
+              </div>
+            ))}
+          </div>
+          {stockData.StockMovements.map(
+            (stockMovement: StockMovement, stockIndex: number) =>
+              stockMovement.items.map((item: Item, itemIndex: number) => (
+                <div key={`${stockIndex}-${itemIndex}`} className="fila">
+                  <input
+                    className="celda col-1"
+                    value={item.productCode}
+                    readOnly
+                  />
+                  <input
+                    className="celda col-2"
+                    value={item.description}
+                    readOnly
+                  />
+                  <input className="celda col-1" value={item.lot} readOnly />
+                  <input className="celda col-2" value={item.cum} readOnly />
+                  <input
+                    className="celda col-1"
+                    value={new Date(item.expiredDate).toLocaleDateString()}
+                    readOnly
+                  />
+                  <input
+                    className="celda col-2"
+                    value={item.quantity.toString()}
+                    readOnly
+                  />
+                  <input
+                    className="celda col-1"
+                    value={new Date(
+                      stockMovement.messageDate
+                    ).toLocaleDateString()}
+                    readOnly
+                  />
+                  <input
+                    className="celda col-2"
+                    value={`Serial-${itemIndex}`}
+                    readOnly
+                  />
+                  <input
+                    type="checkbox"
+                    className="celda celdache-checkbox"
+                    checked={selectedItems.some(
+                      (i) =>
+                        i.productCode === item.productCode && i.lot === item.lot
+                    )}
+                    onChange={(e) =>
+                      handleCheckboxChange(item, e.target.checked, e)
+                    }
+                  />
+                </div>
+              ))
+          )}
+        </div>
+        <div className="contenedor-botones-salir-y-continuar">
+          <button
+            className="boton-continuar-nueva-prudccion"
+            onClick={handleConfirmSelection}
+          >
+            <span>Continuar</span>
             <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
               xmlns="http://www.w3.org/2000/svg"
-              transform="rotate(0 0 0)"
+              fill="none"
+              viewBox="0 0 74 74"
+              height="34"
+              width="34"
             >
+              <circle
+                stroke-width="3"
+                stroke="white"
+                r="35.5"
+                cy="37"
+                cx="37"
+              ></circle>
               <path
-                d="M10.9453 20.5C11.3327 21.0667 11.8027 21.5725 12.338 22H6.75C5.50736 22 4.5 20.9926 4.5 19.75V9.62105C4.5 9.02455 4.73686 8.45247 5.15851 8.03055L10.5262 2.65951C10.9482 2.23725 11.5207 2 12.1177 2H17.25C18.4926 2 19.5 3.00736 19.5 4.25V10.3782C19.0266 10.1599 18.5241 9.99391 18 9.88753V4.25C18 3.83579 17.6642 3.5 17.25 3.5H12.248L12.2509 7.4984C12.2518 8.74166 11.2442 9.75 10.0009 9.75H6V19.75C6 20.1642 6.33579 20.5 6.75 20.5H10.9453ZM10.7488 4.55876L7.05986 8.25H10.0009C10.4153 8.25 10.7512 7.91389 10.7509 7.49947L10.7488 4.55876Z"
-                fill="#ffffff"
-                fillRule="evenodd"
-                clipRule="evenodd"
-              />
-              <path
-                d="M15.8751 14.9999C15.8751 14.5857 16.2109 14.2499 16.6251 14.2499C17.0393 14.2499 17.3751 14.5857 17.3751 14.9999V15.8749H18.2502C18.6644 15.8749 19.0002 16.2107 19.0002 16.6249C19.0002 17.0391 18.6644 17.3749 18.2502 17.3749H17.3751V18.25C17.3751 18.6643 17.0393 19 16.6251 19C16.2109 19 15.8751 18.6643 15.8751 18.25V17.3749H15C14.5858 17.3749 14.25 17.0391 14.25 16.6249C14.25 16.2107 14.5858 15.8749 15 15.8749H15.8751V14.9999Z"
-                fill="#ffffff"
-              />
-              <path
-                d="M11.25 16.625C11.25 13.6565 13.6565 11.25 16.625 11.25C19.5935 11.25 22 13.6565 22 16.625C22 19.5935 19.5935 22 16.625 22C13.6565 22 11.25 19.5935 11.25 16.625ZM16.625 12.75C14.4849 12.75 12.75 14.4849 12.75 16.625C12.75 18.7651 14.4849 20.5 16.625 20.5C18.7651 20.5 20.5 18.7651 20.5 16.625C20.5 14.4849 18.7651 12.75 16.625 12.75Z"
-                fill="#ffffff"
-                fillRule="evenodd"
-                clipRule="evenodd"
-              />
+                fill="white"
+                d="M25 35.5C24.1716 35.5 23.5 36.1716 23.5 37C23.5 37.8284 24.1716 38.5 25 38.5V35.5ZM49.0607 38.0607C49.6464 37.4749 49.6464 36.5251 49.0607 35.9393L39.5147 26.3934C38.9289 25.8076 37.9792 25.8076 37.3934 26.3934C36.8076 26.9792 36.8076 27.9289 37.3934 28.5147L45.8787 37L37.3934 45.4853C36.8076 46.0711 36.8076 47.0208 37.3934 47.6066C37.9792 48.1924 38.9289 48.1924 39.5147 47.6066L49.0607 38.0607ZM25 38.5L48 38.5V35.5L25 35.5V38.5Z"
+              ></path>
             </svg>
           </button>
-          <button className="remove-row-button" onClick={removeRow}>
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              transform="rotate(0 0 0)"
+          <div className="styled-wrapper-continuar-nueva-prudccion">
+            <button
+              className="button-continuar-nueva-prudccion"
+              onClick={handleClickHomePro}
             >
-              <path
-                d="M14.7223 12.7585C14.7426 12.3448 14.4237 11.9929 14.01 11.9726C13.5963 11.9522 13.2444 12.2711 13.2241 12.6848L12.9999 17.2415C12.9796 17.6552 13.2985 18.0071 13.7122 18.0274C14.1259 18.0478 14.4778 17.7289 14.4981 17.3152L14.7223 12.7585Z"
-                fill="#ffffff"
-              />
-              <path
-                d="M9.98802 11.9726C9.5743 11.9929 9.25542 12.3448 9.27577 12.7585L9.49993 17.3152C9.52028 17.7289 9.87216 18.0478 10.2859 18.0274C10.6996 18.0071 11.0185 17.6552 10.9981 17.2415L10.774 12.6848C10.7536 12.2711 10.4017 11.9522 9.98802 11.9726Z"
-                fill="#ffffff"
-              />
-              <path
-                d="M10.249 2C9.00638 2 7.99902 3.00736 7.99902 4.25V5H5.5C4.25736 5 3.25 6.00736 3.25 7.25C3.25 8.28958 3.95503 9.16449 4.91303 9.42267L5.54076 19.8848C5.61205 21.0729 6.59642 22 7.78672 22H16.2113C17.4016 22 18.386 21.0729 18.4573 19.8848L19.085 9.42267C20.043 9.16449 20.748 8.28958 20.748 7.25C20.748 6.00736 19.7407 5 18.498 5H15.999V4.25C15.999 3.00736 14.9917 2 13.749 2H10.249ZM14.499 5V4.25C14.499 3.83579 14.1632 3.5 13.749 3.5H10.249C9.83481 3.5 9.49902 3.83579 9.49902 4.25V5H14.499ZM5.5 6.5C5.08579 6.5 4.75 6.83579 4.75 7.25C4.75 7.66421 5.08579 8 5.5 8H18.498C18.9123 8 19.248 7.66421 19.248 7.25C19.248 6.83579 18.9123 6.5 18.498 6.5H5.5ZM6.42037 9.5H17.5777L16.96 19.7949C16.9362 20.191 16.6081 20.5 16.2113 20.5H7.78672C7.38995 20.5 7.06183 20.191 7.03807 19.7949L6.42037 9.5Z"
-                fill="#ffffff"
-                fillRule="evenodd"
-                clipRule="evenodd"
-              />
-            </svg>
-          </button>
+              <div className="button-box-continuar-nueva-prudccion">
+                <span className="button-elem-continuar-nueva-prudccion">
+                  <svg
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="arrow-icon-continuar-nueva-prudccion"
+                  >
+                    <path
+                      fill="black"
+                      d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"
+                    ></path>
+                  </svg>
+                </span>
+                <span className="button-elem-continuar-nueva-prudccion">
+                  <svg
+                    fill="black"
+                    viewBox="0 0  24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="arrow-icon-continuar-nueva-prudccion"
+                  >
+                    <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"></path>
+                  </svg>
+                </span>
+                <span className="button-elem-continuar-nueva-prudccion">
+                  <div>{/* Aca van los svg */}</div>
+                </span>
+              </div>
+            </button>
+          </div>
         </div>
         {showPopup && (
           <div className="popup-overlay">
@@ -269,7 +259,7 @@ const Nuevaproduccion = () => {
               <button className="close-button" onClick={handleClosePopup}>
                 X
               </button>
-              <h2>¿Cómo funciona el produccir un producto?</h2>
+              <h2>¿Cómo comienzo a iniciar producción?</h2>
               <p>
                 Lorem ipsum dolor sit amet, consectetur adipiscing elit.
                 Praesent vel dolor egestas, scelerisque nunc et, iaculis neque.
@@ -278,10 +268,15 @@ const Nuevaproduccion = () => {
             </div>
           </div>
         )}
-        {showValidationPopup && (
+        {warningPopup && (
           <div className="popup-overlay">
             <div className="popup">
-              <div className="svg-placeholder"> {/* SVG placeholder */}</div>
+              <button
+                className="close-button"
+                onClick={handleCloseWarningPopup}
+              >
+                X
+              </button>{" "}
               <svg
                 width="40"
                 height="40"
@@ -321,75 +316,23 @@ const Nuevaproduccion = () => {
                   fill="#124d83"
                 />
               </svg>
-              <p>Por favor selecciona una opción para cada casilla</p>
-              <button
-                className="close-button"
-                onClick={() => setShowValidationPopup(false)}
-              >
-                X
-              </button>
+              <p>Por favor escoge primero una opción antes de continuar</p>
             </div>
           </div>
         )}
+        {showWarning && (
+          <div
+            className="warning-popup"
+            style={{
+              top: `${warningPosition.top}px`,
+              left: `${warningPosition.left}px`,
+              transform: "translate(-80%, 400%)",
+            }}
+          >
+            Solo se puede un producto por tanda
+          </div>
+        )}
       </section>
-      <div className="contenedor-botones-salir-y-continuar">
-        <button
-          className="boton-continuar-nueva-prudccion"
-          onClick={handleContinue}
-        >
-          <span>Continuar</span>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 74 74"
-            height="34"
-            width="34"
-          >
-            <circle
-              stroke-width="3"
-              stroke="white"
-              r="35.5"
-              cy="37"
-              cx="37"
-            ></circle>
-            <path
-              fill="white"
-              d="M25 35.5C24.1716 35.5 23.5 36.1716 23.5 37C23.5 37.8284 24.1716 38.5 25 38.5V35.5ZM49.0607 38.0607C49.6464 37.4749 49.6464 36.5251 49.0607 35.9393L39.5147 26.3934C38.9289 25.8076 37.9792 25.8076 37.3934 26.3934C36.8076 26.9792 36.8076 27.9289 37.3934 28.5147L45.8787 37L37.3934 45.4853C36.8076 46.0711 36.8076 47.0208 37.3934 47.6066C37.9792 48.1924 38.9289 48.1924 39.5147 47.6066L49.0607 38.0607ZM25 38.5L48 38.5V35.5L25 35.5V38.5Z"
-            ></path>
-          </svg>
-        </button>
-        <div className="styled-wrapper-continuar-nueva-prudccion">
-          <button
-            className="button-continuar-nueva-prudccion"
-            onClick={handleClickHomePro}
-          >
-            <div className="button-box-continuar-nueva-prudccion">
-              <span className="button-elem-continuar-nueva-prudccion">
-                <svg
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="arrow-icon-continuar-nueva-prudccion"
-                >
-                  <path
-                    fill="black"
-                    d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"
-                  ></path>
-                </svg>
-              </span>
-              <span className="button-elem-continuar-nueva-prudccion">
-                <svg
-                  fill="black"
-                  viewBox="0 0  24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="arrow-icon-continuar-nueva-prudccion"
-                >
-                  <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"></path>
-                </svg>
-              </span>
-            </div>
-          </button>
-        </div>
-      </div>
     </div>
   );
 };

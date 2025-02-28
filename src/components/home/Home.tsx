@@ -244,7 +244,7 @@ const Home = () => {
           </svg>
           <span>INFORMES</span>
         </div>
-        <div className="contenedor-actividades">
+        {/* <div className="contenedor-actividades">
           <svg
             width="200"
             height="200"
@@ -265,7 +265,7 @@ const Home = () => {
             />
           </svg>
           <span>REGRESAR</span>
-        </div>
+        </div> */}
       </section>
     </div>
   );

@@ -6,6 +6,8 @@ import Nuevaproduccion from "./components/nuevaproduccion/Nuevaproduccion";
 import Produccionpendiente from "./components/produccionpendiente/Produccionpendiente";
 import Informes from "./components/informes/Informes";
 import Inicioproduccion from "./components/nuevaproduccion/inicioproduccion/Inicioproduccion";
+import Finproduccion from "./components/nuevaproduccion/finproduccion/Finproduccion";
+import Esperaproduccion from "./components/nuevaproduccion/esperaproduccion/Esperaproduccion";
 
 function App() {
   return (
@@ -17,6 +19,8 @@ function App() {
         <Route path="/produccionpendiente" element={<Produccionpendiente />} />
         <Route path="/informes" element={<Informes />} />
         <Route path="/Inicioproduccion" element={<Inicioproduccion />} />
+        <Route path="/finproduccion" element={<Finproduccion />} />
+        <Route path="/esperaproduccion" element={<Esperaproduccion />} />
       </Routes>
     </Router>
   );

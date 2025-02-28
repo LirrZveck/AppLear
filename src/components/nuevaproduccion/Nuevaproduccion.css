@@ -202,15 +202,38 @@
 .contenedor-botones-salir-y-continuar {
   display: flex;
   justify-content: flex-end;
-  position: fixed;
+  position: relative;
   bottom: 0;
   right: 0;
   margin: 20px; /* Margen opcional para dar espacio desde el borde */
+}
+.celdache-checkbox {
+  background-color: #ddeaf6 !important;
+  padding: 1px !important;
 }
 
 @media screen and (max-width: 768px) {
   .contenedor-botones-salir-y-continuar {
     bottom: 10px; /* Ajusta según sea necesario para pantallas más pequeñas */
     right: 10px; /* Ajusta según sea necesario para pantallas más pequeñas */
+  }
+}
+.warning-popup {
+  position: absolute;
+  background-color: rgba(0, 0, 0, 0.8);
+  width: 290px;
+  color: rgb(255, 255, 255);
+  padding: 5px 10px;
+  border-radius: 5px;
+  animation: fadeOut 10s forwards;
+  pointer-events: none; /* Para que el mensaje no interfiera con otros elementos */
+}
+
+@keyframes fadeOut {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
   }
 }
