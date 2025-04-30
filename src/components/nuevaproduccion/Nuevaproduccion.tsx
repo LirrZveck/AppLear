@@ -261,9 +261,11 @@ const Nuevaproduccion = () => {
               </button>
               <h2>¿Cómo comienzo a iniciar producción?</h2>
               <p>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-                Praesent vel dolor egestas, scelerisque nunc et, iaculis neque.
-                Donec et lorem non ligula euismod hendrerit ut non lorem.
+                Iniciar producción es sencillo. Mira entre las diferentes
+                opciones que tenemos en plantilla y escoge el producto que
+                quieras comenzar a producir. <b>OJO</b>: solo se puede
+                seleccionar un producto por tanda. Cuando lo tengas marcado,
+                sigue al siguiente paso con el botón "Continuar".
               </p>
             </div>
           </div>

@@ -97,9 +97,11 @@ const Esperaproduccion = () => {
               </button>
               <h2>Esperando la confirmacion de la producción</h2>
               <p>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-                Praesent vel dolor egestas, scelerisque nunc et, iaculis neque.
-                Donec et lorem non ligula euismod hendrerit ut non lorem.
+                Una vez hayas llegado a este punto, deberás esperar a que la
+                producción finalice. <b>OJO</b>: no cierres la pestaña ni el
+                navegador hasta que el proceso haya terminado. Cuando la
+                producción haya finalizado, haz clic en el botón{" "}
+                <b>FINALIZAR PRODUCCIÓN</b>.
               </p>
             </div>
           </div>

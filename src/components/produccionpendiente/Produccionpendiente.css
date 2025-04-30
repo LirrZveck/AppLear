@@ -1,0 +1,18 @@
+.produccion-tabla h3 {
+  display: flex;
+  margin-left: 10px;
+}
+
+.col-1 input {
+  width: 12px;
+  height: 13px;
+}
+
+.eliminar-boton {
+  width: 15px;
+  height: 15px;
+}
+
+#h2-produccion-pendiente {
+  margin-left: 10px !important;
+}

@@ -160,9 +160,9 @@ const Home = () => {
             </button>
             <h2>¿Cómo funciona el primer paso?</h2>
             <p>
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent
-              vel dolor egestas, scelerisque nunc et, iaculis neque. Donec et
-              lorem non ligula euismod hendrerit ut non lorem.
+              Esta herramienta sirve para comenzar los procesos de fabricación
+              de los productos. Escoge entre nuestras opciones la operación que
+              quieras realizar y sigue los procesos.
             </p>
           </div>
         </div>

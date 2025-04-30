@@ -1,10 +1,56 @@
 import Header from "../header/Header";
 import "./Informes.css";
 import logoAlercoProduccion from "../images/Alear_Logo-1-1-1-1.png";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router";
+
+interface InformeData {
+  description: string;
+  totalProduced: number;
+  damagedQuantity: number | string;
+  remainingProducts: number | string;
+  createdAt: string;
+}
 
 const Informes = () => {
   const [showPopup, setShowPopup] = useState(false);
+  const [groupedInformes, setGroupedInformes] = useState<{
+    [key: string]: InformeData[];
+  }>({});
+
+  const navigateHomeInformes = useNavigate();
+
+  const handleNavigateHomeInformes = () => {
+    navigateHomeInformes("/");
+  };
+
+  useEffect(() => {
+    const storedInformes = localStorage.getItem("informesProduccion");
+    if (storedInformes) {
+      const parsedInformes: InformeData[] = JSON.parse(storedInformes);
+
+      // Agregar fecha de creación si no existe
+      const updatedInformes = parsedInformes.map((item) => ({
+        ...item,
+        createdAt: item.createdAt || new Date().toLocaleDateString(),
+      }));
+
+      // Agrupar por fecha
+      const informesByDate: { [key: string]: InformeData[] } = {};
+      updatedInformes.forEach((item) => {
+        if (!informesByDate[item.createdAt]) {
+          informesByDate[item.createdAt] = [];
+        }
+        informesByDate[item.createdAt].unshift(item); // Añadir el nuevo producto arriba
+      });
+
+      setGroupedInformes(informesByDate);
+      localStorage.setItem(
+        "informesProduccion",
+        JSON.stringify(updatedInformes)
+      );
+    }
+  }, []);
 
   const handleOpenPopup = () => {
     setShowPopup(true);
@@ -12,6 +58,35 @@ const Informes = () => {
 
   const handleClosePopup = () => {
     setShowPopup(false);
+  };
+
+  const exportToExcel = (data: InformeData[], date: string) => {
+    const headers = [
+      "Descripción",
+      "Cantidad de productos",
+      "Productos dañados",
+      "Productos sobrantes",
+    ];
+
+    const rows = data.map((item) => [
+      item.description,
+      item.totalProduced,
+      item.damagedQuantity,
+      item.remainingProducts,
+    ]);
+
+    const csvContent = [
+      headers.join(","),
+      ...rows.map((row) => row.join(",")),
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `informe_produccion_${date}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -22,7 +97,7 @@ const Informes = () => {
       </div>
       <section>
         <div className="titulo-actividad-hacer">
-          <h2>Informes sobre los productos</h2>{" "}
+          <h2>Informes sobre los productos</h2>
           <svg
             width="30"
             height="30"
@@ -47,7 +122,51 @@ const Informes = () => {
               clipRule="evenodd"
             />
           </svg>
-        </div>{" "}
+        </div>
+
+        {Object.keys(groupedInformes)
+          .sort((a, b) => new Date(b).getTime() - new Date(a).getTime()) // Ordena por fecha, más reciente primero
+          .map((date) => (
+            <div key={date} className="grupo-informes">
+              <span className="fecha-informes">Producción de {date}</span>
+
+              <div className="datos-informes">
+                <div className="fila">
+                  {[
+                    "Descripción",
+                    "Cantidad de productos",
+                    "Productos dañados",
+                    "Productos sobrantes",
+                    "Descargar Informe",
+                  ].map((header, index) => (
+                    <div key={index} className="celda-header">
+                      {header}
+                    </div>
+                  ))}
+                </div>
+                {groupedInformes[date].map((item, index) => (
+                  <div key={index} className="fila fila-separada">
+                    <div className="celda col-1">{item.description}</div>
+                    <div className="celda col-2">{item.totalProduced}</div>
+                    <div className="celda col-1">{item.damagedQuantity}</div>
+                    <div className="celda col-2">{item.remainingProducts}</div>
+                    <div className="celda col-1">
+                      <button
+                        onClick={() =>
+                          exportToExcel(groupedInformes[date], date)
+                        }
+                        className="buttonDownload"
+                      >
+                        Descargar
+                        {/* aca va el svg de botón */}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+
         {showPopup && (
           <div className="popup-overlay">
             <div className="popup">
@@ -56,14 +175,48 @@ const Informes = () => {
               </button>
               <h2>¿Cómo funciona la lista de informes?</h2>
               <p>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-                Praesent vel dolor egestas, scelerisque nunc et, iaculis neque.
-                Donec et lorem non ligula euismod hendrerit ut non lorem.
+                Aquí puedes visualizar el resumen de la producción, agrupado por
+                fecha de creación. Si deseas exportar los informes de un día
+                específico, usa el botón de descarga correspondiente.
               </p>
             </div>
           </div>
         )}
       </section>
+      <div className="contenedor-botones-salir-y-continuar">
+        <div className="styled-wrapper-continuar-nueva-prudccion">
+          <button
+            className="button-continuar-nueva-prudccion"
+            onClick={handleNavigateHomeInformes}
+          >
+            <div className="button-box-continuar-nueva-prudccion">
+              <span className="button-elem-continuar-nueva-prudccion">
+                {" "}
+                <svg
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="arrow-icon-continuar-nueva-prudccion"
+                >
+                  <path
+                    fill="black"
+                    d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"
+                  ></path>
+                </svg>
+              </span>
+              <span className="button-elem-continuar-nueva-prudccion">
+                <svg
+                  fill="black"
+                  viewBox="0 0  24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="arrow-icon-continuar-nueva-prudccion"
+                >
+                  <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"></path>
+                </svg>
+              </span>
+            </div>
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
