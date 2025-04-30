@@ -206,7 +206,7 @@ const Nuevaproduccion = () => {
               width="34"
             >
               <circle
-                stroke-width="3"
+                strokeWidth="3"
                 stroke="white"
                 r="35.5"
                 cy="37"
