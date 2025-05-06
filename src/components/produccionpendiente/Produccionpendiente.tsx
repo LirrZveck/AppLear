@@ -50,7 +50,7 @@ const Produccionpendiente = () => {
       const updatedData = [...newTableData];
       updatedData.splice(itemToDelete, 1); // Eliminar el producto
       setNewTableData(updatedData);
-      localStorage.setItem("produccionPendiente", JSON.stringify(updatedData)); // Actualizar localStorage
+      localStorage.setItem("produccionPendiente", JSON.stringify(updatedData));
     }
     handleClosePopup(); // Cerrar el popup
   };
@@ -182,6 +182,7 @@ const Produccionpendiente = () => {
                 <div className="celda col-2">{item.damagedQuantity}</div>
                 <div className="celda col-1">
                   <input
+                    type="checkbox"
                     name="selectedProduct"
                     onChange={() => handleSelectProduct(index)}
                     checked={selectedIndex === index}

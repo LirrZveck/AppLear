@@ -16,3 +16,19 @@
 #h2-produccion-pendiente {
   margin-left: 10px !important;
 }
+
+.popup-buttons {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  align-items: center;
+}
+.popup-buttons button {
+  padding: 10px;
+  width: 150px;
+  border-radius: 10px;
+  border-color: aliceblue;
+  cursor: pointer;
+  background-color: #124d83;
+  color: white;
+}
