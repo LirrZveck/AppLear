@@ -6,20 +6,20 @@ import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
 
 interface StockMovement {
-  messageID: string;
-  messageDate: string;
-  messageType: string;
-  messageUserID: string;
-  logisticsCenter: string;
+  message_id: string;
+  message_date: string;
+  message_type: string;
+  message_user_id: string;
+  logistics_center: string;
   items?: Array<Item>;
 }
 
 interface Item {
-  productCode: string;
+  product_code: string;
   lot: string;
   description: string;
   quantity: number;
-  expiredDate: string;
+  expired_date: string;
   cum: string;
   warehouse: string;
 }
@@ -133,7 +133,7 @@ const Nuevaproduccion = () => {
                 <div key={index} className="fila">
                   <input
                     className="celda col-1"
-                    value={item.productCode}
+                    value={item.product_code}
                     readOnly
                   />
                   <input
@@ -145,7 +145,11 @@ const Nuevaproduccion = () => {
                   <input className="celda col-2" value={item.cum} readOnly />
                   <input
                     className="celda col-1"
-                    value={new Date(item.expiredDate).toLocaleDateString()}
+                    value={
+                      item.expired_date
+                        ? new Date(item.expired_date).toLocaleDateString()
+                        : ""
+                    }
                     readOnly
                   />
                   <input
@@ -155,9 +159,13 @@ const Nuevaproduccion = () => {
                   />
                   <input
                     className="celda col-1"
-                    value={new Date(
-                      stockMovements[0]?.messageDate
-                    ).toLocaleDateString()}
+                    value={
+                      stockMovements[0]?.message_date
+                        ? new Date(
+                            stockMovements[0]?.message_date
+                          ).toLocaleDateString()
+                        : ""
+                    }
                     readOnly
                   />
                   <input
@@ -171,7 +179,8 @@ const Nuevaproduccion = () => {
                     className="celda celdache-checkbox"
                     checked={selectedItems.some(
                       (i) =>
-                        i.productCode === item.productCode && i.lot === item.lot
+                        i.product_code === item.product_code &&
+                        i.lot === item.lot
                     )}
                     onChange={(e) =>
                       handleCheckboxChange(item, e.target.checked)

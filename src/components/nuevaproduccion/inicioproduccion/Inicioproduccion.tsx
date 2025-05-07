@@ -5,11 +5,11 @@ import Header from "../../header/Header";
 import { useLocation, useNavigate } from "react-router-dom";
 
 interface Item {
-  productCode: string;
+  product_code: string;
   lot: string;
   description: string;
   quantity: number;
-  expiredDate: string;
+  expired_date: string;
   cum: string;
   warehouse: string;
   damagedQuantity?: number;
@@ -24,29 +24,25 @@ const Inicioproduccion = () => {
   const [quantities, setQuantities] = useState<{ [key: string]: number }>({});
   const [showPopup, setShowPopup] = useState(false);
 
-  // Recuperar el producto seleccionado desde Produccionpendiente o inicializar desde Nueva Producción
   useEffect(() => {
     const storedProduct = localStorage.getItem("selectedProduct");
     if (storedProduct) {
       const parsedProduct: Item = JSON.parse(storedProduct);
 
-      // Inicializar la tabla con el producto seleccionado
       setSelectedItems([parsedProduct]);
 
-      // Asignar las unidades a producir al valor de "damagedQuantity" si existe, sino usar "quantity"
       setQuantities({
-        [`${parsedProduct.productCode}${parsedProduct.lot}`]:
+        [`${parsedProduct.product_code}${parsedProduct.lot}`]:
           parsedProduct.damagedQuantity || parsedProduct.quantity,
       });
 
-      // Limpiar el producto almacenado en localStorage una vez cargado
       localStorage.removeItem("selectedProduct");
     } else if (location.state?.selectedItems) {
       const initialItems: Item[] = location.state.selectedItems || [];
       setSelectedItems(initialItems);
       setQuantities(
         initialItems.reduce((acc, item) => {
-          acc[item.productCode + item.lot] = item.quantity;
+          acc[item.product_code + item.lot] = item.quantity;
           return acc;
         }, {} as { [key: string]: number })
       );
@@ -79,13 +75,13 @@ const Inicioproduccion = () => {
 
   const handlefindeproduccion = () => {
     const rows = selectedItems.map((item, itemIndex) => {
-      const key = item.productCode + item.lot;
+      const key = item.product_code + item.lot;
       return [
-        item.productCode,
+        item.product_code,
         item.description,
         item.lot,
         item.cum,
-        new Date(item.expiredDate).toLocaleDateString(),
+        new Date(item.expired_date).toLocaleDateString(),
         item.quantity,
         new Date().toLocaleDateString(),
         `Serial-${itemIndex}`,
@@ -180,12 +176,12 @@ const Inicioproduccion = () => {
             ))}
           </div>
           {selectedItems.map((item: Item, itemIndex: number) => {
-            const key = item.productCode + item.lot;
+            const key = item.product_code + item.lot;
             return (
               <div key={itemIndex} className="fila">
                 <input
                   className="celda col-1"
-                  value={item.productCode}
+                  value={item.product_code}
                   readOnly
                 />
                 <input
@@ -197,7 +193,7 @@ const Inicioproduccion = () => {
                 <input className="celda col-2" value={item.cum} readOnly />
                 <input
                   className="celda col-1"
-                  value={new Date(item.expiredDate).toLocaleDateString()}
+                  value={new Date(item.expired_date).toLocaleDateString()}
                   readOnly
                 />
                 <input

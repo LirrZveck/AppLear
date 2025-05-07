@@ -5,11 +5,11 @@ import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 interface Item {
-  productCode: string;
+  product_code: string;
   lot: string;
   description: string;
   quantity: number;
-  expiredDate: string;
+  expiredd_ate: string;
   cum: string;
   warehouse: string;
 }
@@ -89,7 +89,7 @@ const Finproduccion = () => {
     const informesData = selectedItems.map((item) => {
       const remainingProducts =
         item.quantity -
-        (quantities[item.productCode + item.lot] || item.quantity);
+        (quantities[item.product_code + item.lot] || item.quantity);
 
       return {
         description: item.description,
@@ -172,16 +172,16 @@ const Finproduccion = () => {
               ))}
             </div>
             {selectedItems.map((item, index) => {
-              const key = item.productCode + item.lot;
+              const key = item.product_code + item.lot;
               const quantityProduced = quantities[key];
               return (
                 <div key={index} className="fila">
-                  <div className="celda col-1">{item.productCode}</div>
+                  <div className="celda col-1">{item.product_code}</div>
                   <div className="celda col-2">{item.description}</div>
                   <div className="celda col-1">{item.lot}</div>
                   <div className="celda col-2">{item.cum}</div>
                   <div className="celda col-1">
-                    {new Date(item.expiredDate).toLocaleDateString()}
+                    {new Date(item.expiredd_ate).toLocaleDateString()}
                   </div>
                   <div className="celda col-2">{item.quantity}</div>
                   <div className="celda col-1">
