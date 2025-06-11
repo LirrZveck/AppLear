@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Header from "../header/Header";
 import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
+import Swal from "sweetalert2";
 
 interface StockMovement {
   message_id: string;
@@ -22,22 +23,19 @@ interface Item {
   expired_date: string;
   cum: string;
   warehouse: string;
+  status_prod: boolean;
 }
 
 const Nuevaproduccion = () => {
   const location = useLocation();
-  const [stockMovements, setStockMovements] = useState<StockMovement[]>([]);
-  const [showPopup, setShowPopup] = useState(false);
-  const [selectedItems, setSelectedItems] = useState<Item[]>(
-    location.state?.selectedItems || []
-  );
-  const [warningPopup, setWarningPopup] = useState(false);
-  const [showWarning, setShowWarning] = useState(false);
-  const [warningPosition, setWarningPosition] = useState<{
-    top: number;
-    left: number;
-  }>({ top: 0, left: 0 });
   const navigate = useNavigate();
+
+  const [stockMovements, setStockMovements] = useState<Item[]>([]); // Estado simplificado para solo contener los items
+  const [showPopup, setShowPopup] = useState(false);
+  const [selectedItems, setSelectedItems] = useState<Item[]>([]);
+  const [warningPopup, setWarningPopup] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false); // Para deshabilitar el botón al enviar
+
   const headers = [
     "Código del producto",
     "Descripción",
@@ -50,16 +48,20 @@ const Nuevaproduccion = () => {
     "Seleccionar",
   ];
 
-  // Obtener datos desde el backend
   useEffect(() => {
     axios
       .get("http://localhost:3000/Products/BIQ/stockMovement")
       .then((response) => {
-        console.log(
-          "📌 Datos obtenidos del backend:",
-          JSON.stringify(response.data, null, 2)
-        );
-        setStockMovements(response.data);
+        if (!response.data || !Array.isArray(response.data)) {
+          console.error("❌ `response.data` no es un array válido.");
+          return;
+        }
+
+        const productosActivos = response.data
+          .flatMap((movimiento: StockMovement) => movimiento.items || [])
+          .filter((item: Item) => item.status_prod === true);
+
+        setStockMovements(productosActivos);
       })
       .catch((error) => console.error("❌ Error obteniendo datos:", error));
   }, []);
@@ -67,20 +69,47 @@ const Nuevaproduccion = () => {
   const handleOpenPopup = () => setShowPopup(true);
   const handleClosePopup = () => setShowPopup(false);
   const handleClickHomePro = () => navigate("/");
-  const handleConfirmSelection = () => {
-    if (selectedItems.length === 0) {
-      setWarningPopup(true); // 🔴 Muestra advertencia si no hay selección
-    } else {
-      navigate("/inicioproduccion", { state: { selectedItems } });
-    }
-  };
   const handleCloseWarningPopup = () => setWarningPopup(false);
 
   const handleCheckboxChange = (item: Item, isChecked: boolean) => {
     if (isChecked) {
-      setSelectedItems([item]); // Se permite solo un producto por tanda
+      setSelectedItems([item]);
     } else {
       setSelectedItems([]);
+    }
+  };
+
+  // --- FUNCIÓN ACTUALIZADA ---
+  const handleConfirmSelection = async () => {
+    if (selectedItems.length === 0) {
+      setWarningPopup(true);
+      return;
+    }
+
+    if (isSubmitting) return; // Prevenir doble clic
+    setIsSubmitting(true);
+
+    const selectedItem = selectedItems[0];
+
+    try {
+      // Llamar a la API para registrar el producto como activo
+      await axios.post("http://localhost:3000/Products/BIQ/start-production", {
+        productCode: selectedItem.product_code,
+        lot: selectedItem.lot,
+        source: "item", // Indicamos que viene de la tabla 'item'
+      });
+
+      // Navegar a la siguiente página solo si la API responde con éxito
+      navigate("/inicioproduccion");
+    } catch (error) {
+      console.error("❌ Error al iniciar la producción:", error);
+      Swal.fire(
+        "Error",
+        "No se pudo iniciar la producción. Por favor, inténtelo de nuevo.",
+        "error"
+      );
+    } finally {
+      setIsSubmitting(false); // Habilitar el botón de nuevo
     }
   };
 
@@ -126,75 +155,46 @@ const Nuevaproduccion = () => {
               </div>
             ))}
           </div>
-          {stockMovements.length > 0 &&
-            stockMovements
-              .flatMap((movement) => movement.items || [])
-              .map((item, index) => (
-                <div key={index} className="fila">
-                  <input
-                    className="celda col-1"
-                    value={item.product_code}
-                    readOnly
-                  />
-                  <input
-                    className="celda col-2"
-                    value={item.description}
-                    readOnly
-                  />
-                  <input className="celda col-1" value={item.lot} readOnly />
-                  <input className="celda col-2" value={item.cum} readOnly />
-                  <input
-                    className="celda col-1"
-                    value={
-                      item.expired_date
-                        ? new Date(item.expired_date).toLocaleDateString()
-                        : ""
-                    }
-                    readOnly
-                  />
-                  <input
-                    className="celda col-2"
-                    value={item.quantity.toString()}
-                    readOnly
-                  />
-                  <input
-                    className="celda col-1"
-                    value={
-                      stockMovements[0]?.message_date
-                        ? new Date(
-                            stockMovements[0]?.message_date
-                          ).toLocaleDateString()
-                        : ""
-                    }
-                    readOnly
-                  />
-                  <input
-                    className="celda col-2"
-                    value={`Serial-${index}`}
-                    readOnly
-                  />
-
-                  <input
-                    type="checkbox"
-                    className="celda celdache-checkbox"
-                    checked={selectedItems.some(
-                      (i) =>
-                        i.product_code === item.product_code &&
-                        i.lot === item.lot
-                    )}
-                    onChange={(e) =>
-                      handleCheckboxChange(item, e.target.checked)
-                    }
-                  />
+          {stockMovements.length > 0 ? (
+            stockMovements.map((item, index) => (
+              <div key={`${item.product_code}-${item.lot}`} className="fila">
+                <div className="celda col-1">{item.product_code}</div>
+                <div className="celda col-2">{item.description}</div>
+                <div className="celda col-1">{item.lot}</div>
+                <div className="celda col-2">{item.cum}</div>
+                <div className="celda col-1">
+                  {item.expired_date
+                    ? new Date(item.expired_date).toLocaleDateString()
+                    : "No definida"}
                 </div>
-              ))}
+                <div className="celda col-2">{item.quantity}</div>
+                <div className="celda col-1">
+                  {new Date().toLocaleDateString()}
+                </div>
+                <div className="celda col-2">{`Serial-${index}`}</div>
+                <input
+                  type="checkbox"
+                  className="celda celdache-checkbox"
+                  id="celda-nueva-produccion"
+                  checked={selectedItems.some(
+                    (i) =>
+                      i.product_code === item.product_code && i.lot === item.lot
+                  )}
+                  onChange={(e) => handleCheckboxChange(item, e.target.checked)}
+                />
+              </div>
+            ))
+          ) : (
+            <p>⚠️ No hay productos disponibles para una nueva producción.</p>
+          )}
         </div>
         <div className="contenedor-botones-salir-y-continuar">
           <button
             className="boton-continuar-nueva-prudccion"
             onClick={handleConfirmSelection}
+            disabled={isSubmitting}
           >
-            <span>Continuar</span>
+            <span>{isSubmitting ? "Iniciando..." : "Continuar"}</span>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
@@ -222,7 +222,6 @@ const Nuevaproduccion = () => {
             >
               <div className="button-box-continuar-nueva-prudccion">
                 <span className="button-elem-continuar-nueva-prudccion">
-                  {" "}
                   <svg
                     viewBox="0 0 24 24"
                     xmlns="http://www.w3.org/2000/svg"
@@ -237,7 +236,7 @@ const Nuevaproduccion = () => {
                 <span className="button-elem-continuar-nueva-prudccion">
                   <svg
                     fill="black"
-                    viewBox="0 0  24 24"
+                    viewBox="0 0 24 24"
                     xmlns="http://www.w3.org/2000/svg"
                     className="arrow-icon-continuar-nueva-prudccion"
                   >

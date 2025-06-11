@@ -2,14 +2,18 @@ import Header from "../header/Header";
 import "./Informes.css";
 import logoAlercoProduccion from "../images/Alear_Logo-1-1-1-1.png";
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { useNavigate } from "react-router";
 
 interface InformeData {
+  id: number;
+  productCode: string;
   description: string;
   totalProduced: number;
-  damagedQuantity: number | string;
-  remainingProducts: number | string;
+  damagedQuantity: number;
+  remainingProducts: number;
   createdAt: string;
+  reportDate: string;
 }
 
 const Informes = () => {
@@ -17,6 +21,8 @@ const Informes = () => {
   const [groupedInformes, setGroupedInformes] = useState<{
     [key: string]: InformeData[];
   }>({});
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const navigateHomeInformes = useNavigate();
 
@@ -25,68 +31,109 @@ const Informes = () => {
   };
 
   useEffect(() => {
-    const storedInformes = localStorage.getItem("informesProduccion");
-    if (storedInformes) {
-      const parsedInformes: InformeData[] = JSON.parse(storedInformes);
+    const fetchReports = async () => {
+      setIsLoading(true);
+      setError(null);
 
-      // Agregar fecha de creación si no existe
-      const updatedInformes = parsedInformes.map((item) => ({
-        ...item,
-        createdAt: item.createdAt || new Date().toLocaleDateString(),
-      }));
+      try {
+        const response = await axios.get(
+          "http://localhost:3000/Products/getProductionReports"
+        );
 
-      // Agrupar por fecha
-      const informesByDate: { [key: string]: InformeData[] } = {};
-      updatedInformes.forEach((item) => {
-        if (!informesByDate[item.createdAt]) {
-          informesByDate[item.createdAt] = [];
-        }
-        informesByDate[item.createdAt].unshift(item); // Añadir el nuevo producto arriba
-      });
+        console.log("Datos recibidos del backend:", response.data);
 
-      setGroupedInformes(informesByDate);
-      localStorage.setItem(
-        "informesProduccion",
-        JSON.stringify(updatedInformes)
-      );
-    }
+        const formatDate = (dateString: string) => {
+          try {
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) {
+              console.warn("Fecha inválida recibida:", dateString);
+              return "Fecha desconocida";
+            }
+            return date.toLocaleDateString("es-ES", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+            });
+          } catch (e) {
+            console.error("Error formateando fecha:", e);
+            return "Fecha inválida";
+          }
+        };
+
+        const informesByDate = response.data.reduce((acc: any, item: any) => {
+          const fecha = formatDate(item.createdAt || item.created_at);
+
+          if (!acc[fecha]) {
+            acc[fecha] = [];
+          }
+
+          acc[fecha].push({
+            id: item.id,
+            productCode: item.productCode || item.product_code,
+            description: item.description,
+            totalProduced: item.totalProduced || item.total_produced || 0,
+            damagedQuantity: item.damagedQuantity || item.damaged_quantity || 0,
+            remainingProducts:
+              item.remainingProducts || item.remaining_products || 0,
+            createdAt: item.createdAt || item.created_at,
+            reportDate: fecha,
+          });
+
+          return acc;
+        }, {});
+
+        console.log("Informes agrupados:", informesByDate);
+        setGroupedInformes(informesByDate);
+      } catch (error) {
+        console.error("Error obteniendo informes:", error);
+        setError("No se pudieron cargar los informes. Intente nuevamente.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchReports();
   }, []);
 
-  const handleOpenPopup = () => {
-    setShowPopup(true);
-  };
+  const handleOpenPopup = () => setShowPopup(true);
+  const handleClosePopup = () => setShowPopup(false);
 
-  const handleClosePopup = () => {
-    setShowPopup(false);
-  };
+  const exportToExcel = (data: InformeData[], fileName: string) => {
+    try {
+      const headers = [
+        "Código Producto",
+        "Descripción",
+        "Total Producido",
+        "Productos Dañados",
+        "Productos Sobrantes",
+        "Fecha de Producción",
+      ];
 
-  const exportToExcel = (data: InformeData[], date: string) => {
-    const headers = [
-      "Descripción",
-      "Cantidad de productos",
-      "Productos dañados",
-      "Productos sobrantes",
-    ];
+      const rows = data.map((item) => [
+        item.productCode,
+        item.description,
+        item.totalProduced,
+        item.damagedQuantity,
+        item.remainingProducts,
+        item.reportDate,
+      ]);
 
-    const rows = data.map((item) => [
-      item.description,
-      item.totalProduced,
-      item.damagedQuantity,
-      item.remainingProducts,
-    ]);
+      const csvContent = [
+        headers.join(","),
+        ...rows.map((row) => row.map((field) => `"${field}"`).join(",")),
+      ].join("\n");
 
-    const csvContent = [
-      headers.join(","),
-      ...rows.map((row) => row.join(",")),
-    ].join("\n");
-
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `informe_produccion_${date}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `informe_produccion_${fileName.replace(/[\/\\]/g, "-")}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error generando CSV:", error);
+      alert("Error al generar el archivo CSV");
+    }
   };
 
   return (
@@ -124,48 +171,71 @@ const Informes = () => {
           </svg>
         </div>
 
-        {Object.keys(groupedInformes)
-          .sort((a, b) => new Date(b).getTime() - new Date(a).getTime()) // Ordena por fecha, más reciente primero
-          .map((date) => (
-            <div key={date} className="grupo-informes">
-              <span className="fecha-informes">Producción de {date}</span>
-
-              <div className="datos-informes">
-                <div className="fila">
-                  {[
-                    "Descripción",
-                    "Cantidad de productos",
-                    "Productos dañados",
-                    "Productos sobrantes",
-                    "Descargar Informe",
-                  ].map((header, index) => (
-                    <div key={index} className="celda-header">
-                      {header}
+        {isLoading ? (
+          <div className="datos-informes">Cargando informes...</div>
+        ) : error ? (
+          <div className="datos-informes" style={{ color: "#dc2626" }}>
+            {error}
+          </div>
+        ) : Object.keys(groupedInformes).length === 0 ? (
+          <div className="datos-informes">No hay informes disponibles</div>
+        ) : (
+          Object.entries(groupedInformes)
+            .sort(([dateA], [dateB]) => {
+              const dateToNumber = (date: string) => {
+                const [day, month, year] = date.split("/");
+                return parseInt(year + month + day);
+              };
+              return dateToNumber(dateB) - dateToNumber(dateA);
+            })
+            .map(([date, reports]) => (
+              <div key={date} className="grupo-informes">
+                <span className="fecha-informes">Producción de {date}</span>
+                <div className="datos-informes">
+                  <div className="fila">
+                    {[
+                      "Código",
+                      "Descripción",
+                      "Producidos",
+                      "Dañados",
+                      "Sobrantes",
+                      "Acciones",
+                    ].map((header, index) => (
+                      <div key={index} className="celda-header">
+                        {header}
+                      </div>
+                    ))}
+                  </div>
+                  {reports.map((report) => (
+                    <div key={report.id} className="fila fila-separada">
+                      <div className="celda col-1">{report.productCode}</div>
+                      <div className="celda col-2">{report.description}</div>
+                      <div className="celda col-1">{report.totalProduced}</div>
+                      <div className="celda col-1">
+                        {report.damagedQuantity}
+                      </div>
+                      <div className="celda col-2">
+                        {report.remainingProducts}
+                      </div>
+                      <div className="celda col-1">
+                        <button
+                          onClick={() =>
+                            exportToExcel(
+                              [report],
+                              `${date}_${report.productCode}`
+                            )
+                          }
+                          className="buttonDownload"
+                        >
+                          Descargar
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
-                {groupedInformes[date].map((item, index) => (
-                  <div key={index} className="fila fila-separada">
-                    <div className="celda col-1">{item.description}</div>
-                    <div className="celda col-2">{item.totalProduced}</div>
-                    <div className="celda col-1">{item.damagedQuantity}</div>
-                    <div className="celda col-2">{item.remainingProducts}</div>
-                    <div className="celda col-1">
-                      <button
-                        onClick={() =>
-                          exportToExcel(groupedInformes[date], date)
-                        }
-                        className="buttonDownload"
-                      >
-                        Descargar
-                        {/* aca va el svg de botón */}
-                      </button>
-                    </div>
-                  </div>
-                ))}
               </div>
-            </div>
-          ))}
+            ))
+        )}
 
         {showPopup && (
           <div className="popup-overlay">
@@ -175,14 +245,16 @@ const Informes = () => {
               </button>
               <h2>¿Cómo funciona la lista de informes?</h2>
               <p>
-                Aquí puedes visualizar el resumen de la producción, agrupado por
-                fecha de creación. Si deseas exportar los informes de un día
-                específico, usa el botón de descarga correspondiente.
+                Los informes se agrupan automáticamente por fecha de producción.
+                Cada grupo muestra todos los productos fabricados en esa fecha,
+                ordenados del más reciente al más antiguo. Puedes descargar los
+                informes individualmente o todo el día completo.
               </p>
             </div>
           </div>
         )}
       </section>
+
       <div className="contenedor-botones-salir-y-continuar">
         <div className="styled-wrapper-continuar-nueva-prudccion">
           <button
@@ -191,7 +263,6 @@ const Informes = () => {
           >
             <div className="button-box-continuar-nueva-prudccion">
               <span className="button-elem-continuar-nueva-prudccion">
-                {" "}
                 <svg
                   viewBox="0 0 24 24"
                   xmlns="http://www.w3.org/2000/svg"

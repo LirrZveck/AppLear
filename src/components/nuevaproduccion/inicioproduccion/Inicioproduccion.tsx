@@ -3,6 +3,7 @@ import logoAlercoProduccion from "../../images/Alear_Logo-1-1-1-1.png";
 import React, { useState, useEffect } from "react";
 import Header from "../../header/Header";
 import { useLocation, useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
 
 interface Item {
   product_code: string;
@@ -15,39 +16,106 @@ interface Item {
   damagedQuantity?: number;
   netQuantity?: number;
   totalProduced?: number;
+  id?: number;
+  messageId?: string;
+  status?: boolean;
+  createdate?: string;
+  originalSourceTable?: string;
 }
 
 const Inicioproduccion = () => {
   const navigate = useNavigate();
   const location = useLocation();
+
   const [selectedItems, setSelectedItems] = useState<Item[]>([]);
   const [quantities, setQuantities] = useState<{ [key: string]: number }>({});
   const [showPopup, setShowPopup] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [apiFetched, setApiFetched] = useState(false);
 
-  useEffect(() => {
-    const storedProduct = localStorage.getItem("selectedProduct");
-    if (storedProduct) {
-      const parsedProduct: Item = JSON.parse(storedProduct);
-
-      setSelectedItems([parsedProduct]);
-
-      setQuantities({
-        [`${parsedProduct.product_code}${parsedProduct.lot}`]:
-          parsedProduct.damagedQuantity || parsedProduct.quantity,
-      });
-
-      localStorage.removeItem("selectedProduct");
-    } else if (location.state?.selectedItems) {
-      const initialItems: Item[] = location.state.selectedItems || [];
-      setSelectedItems(initialItems);
-      setQuantities(
-        initialItems.reduce((acc, item) => {
-          acc[item.product_code + item.lot] = item.quantity;
-          return acc;
-        }, {} as { [key: string]: number })
+  const fetchCurrentProductionItem = async () => {
+    try {
+      const response = await fetch(
+        "http://localhost:3000/Products/BIQ/inProductionItem"
       );
+
+      if (response.status === 204 || response.status === 404) {
+        console.log("No hay ítems en producción activos en el backend.");
+        return null;
+      }
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(
+          `Error HTTP: ${response.status}, mensaje: ${errorText}`
+        );
+      }
+
+      const text = await response.text();
+      if (!text) {
+        console.log("La API devolvió una respuesta vacía.");
+        return null;
+      }
+      const data = JSON.parse(text);
+
+      const apiItem: Item = {
+        product_code: data.productCode,
+        lot: data.lot,
+        description: data.description,
+        quantity: data.quantity,
+        expired_date: data.expiredDate,
+        cum: data.cum,
+        warehouse: data.warehouse,
+        id: data.id,
+        messageId: data.messageId,
+        status: data.status,
+        createdate: data.createdate,
+        originalSourceTable: data.originalSourceTable,
+      };
+
+      if (apiItem && apiItem.product_code && apiItem.lot) {
+        console.log("Ítem cargado desde la API:", apiItem);
+        return apiItem;
+      } else {
+        console.log("La API devolvió un ítem incompleto o inválido.");
+        return null;
+      }
+    } catch (e: any) {
+      console.error("Error al cargar el ítem de producción desde la API:", e);
+      setError(
+        `No se pudo cargar el ítem en producción desde el backend: ${e.message}`
+      );
+      return null;
     }
-  }, [location.state]);
+  };
+
+  // --- LÓGICA DE CARGA SIMPLIFICADA ---
+  useEffect(() => {
+    // La lógica ahora es simple: siempre consulta la API para saber qué está activo.
+    const initializeItems = async () => {
+      setLoading(true);
+      setError(null);
+
+      const apiItem = await fetchCurrentProductionItem();
+
+      if (apiItem) {
+        setSelectedItems([apiItem]);
+        // Iniciar el contador en 0 para el item cargado.
+        setQuantities({
+          [`${apiItem.product_code}${apiItem.lot}`]: 0,
+        });
+      }
+
+      setLoading(false);
+    };
+
+    // Usamos apiFetched para asegurar que la consulta se haga una sola vez
+    if (!apiFetched) {
+      initializeItems();
+      setApiFetched(true);
+    }
+  }, [apiFetched]); // La dependencia ahora es solo apiFetched
 
   const handleOpenPopup = () => {
     setShowPopup(true);
@@ -70,30 +138,62 @@ const Inicioproduccion = () => {
   ];
 
   const handlevolernuevaproduccion = () => {
-    navigate("/nuevaproduccion", { state: { selectedItems, quantities } });
+    // Esta función podría necesitar lógica adicional si se quiere "cancelar" la producción activa
+    navigate("/nuevaproduccion");
   };
 
   const handlefindeproduccion = () => {
-    const rows = selectedItems.map((item, itemIndex) => {
-      const key = item.product_code + item.lot;
+    if (selectedItems.length === 0) {
+      Swal.fire(
+        "Error",
+        "No hay ningún ítem en producción para finalizar.",
+        "error"
+      );
+      return;
+    }
+
+    const item = selectedItems[0];
+    const key = item.product_code + item.lot;
+    const quantityToReport = quantities[key] || 0;
+
+    if (quantityToReport === 0) {
+      Swal.fire(
+        "Error",
+        "Por favor, agrega una o más unidades a producir.",
+        "error"
+      );
+      return;
+    }
+
+    if (quantityToReport > item.quantity) {
+      Swal.fire(
+        "Error",
+        `La cantidad a producir (${quantityToReport}) no puede ser mayor que la cantidad inicial disponible (${item.quantity}).`,
+        "error"
+      );
+      return;
+    }
+
+    const csvHeaders = [...headers];
+    const rows = selectedItems.map((currentItem, itemIndex) => {
+      const currentKey = currentItem.product_code + currentItem.lot;
       return [
-        item.product_code,
-        item.description,
-        item.lot,
-        item.cum,
-        new Date(item.expired_date).toLocaleDateString(),
-        item.quantity,
-        new Date().toLocaleDateString(),
-        `Serial-${itemIndex}`,
-        quantities[key],
+        currentItem.product_code,
+        currentItem.description,
+        currentItem.lot,
+        currentItem.cum,
+        new Date(currentItem.expired_date).toLocaleDateString(),
+        currentItem.quantity,
+        new Date(currentItem.createdate || Date.now()).toLocaleDateString(),
+        `Serial-${currentItem.id || itemIndex}`,
+        quantities[currentKey],
       ];
     });
 
     const csvContent = [
-      headers.join(","),
+      csvHeaders.join(","),
       ...rows.map((row) => row.join(",")),
     ].join("\n");
-
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -102,20 +202,22 @@ const Inicioproduccion = () => {
     a.click();
     URL.revokeObjectURL(url);
 
-    navigate("/esperaproduccion", { state: { selectedItems, quantities } });
+    navigate("/esperaproduccion", {
+      state: { selectedItems, quantities, quantityProduced: quantityToReport },
+    });
   };
 
   const incrementQuantity = (key: string, maxQuantity: number) => {
     setQuantities((prev) => ({
       ...prev,
-      [key]: Math.min(prev[key] + 1, maxQuantity), // No exceder la cantidad máxima
+      [key]: Math.min((prev[key] || 0) + 1, maxQuantity),
     }));
   };
 
   const decrementQuantity = (key: string) => {
     setQuantities((prev) => ({
       ...prev,
-      [key]: Math.max(prev[key] - 1, 0), // Asegurarse de que la cantidad no sea negativa
+      [key]: Math.max((prev[key] || 0) - 1, 0),
     }));
   };
 
@@ -125,13 +227,34 @@ const Inicioproduccion = () => {
     maxQuantity: number
   ) => {
     const value = parseInt(e.target.value, 10);
-    if (!isNaN(value) && value >= 0 && value <= maxQuantity) {
-      setQuantities((prev) => ({
-        ...prev,
-        [key]: value,
-      }));
+    if (isNaN(value)) {
+      setQuantities((prev) => ({ ...prev, [key]: 0 }));
+    } else {
+      const clampedValue = Math.max(0, Math.min(value, maxQuantity));
+      setQuantities((prev) => ({ ...prev, [key]: clampedValue }));
     }
   };
+
+  if (loading) {
+    return (
+      <div className="loading-container">
+        <Header />
+        <p>Cargando ítem de producción...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="error-container">
+        <Header />
+        <p>Error: {error}</p>
+        <button onClick={() => window.location.reload()}>
+          Recargar página
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -141,7 +264,11 @@ const Inicioproduccion = () => {
       </div>
       <section>
         <div className="titulo-actividad-hacer">
-          <h2>Inicio para la producción</h2>
+          <h2>
+            {selectedItems.length > 0
+              ? `Producción Actual: ${selectedItems[0].product_code}`
+              : "No hay Producción Activa"}
+          </h2>
           <svg
             width="30"
             height="30"
@@ -175,59 +302,71 @@ const Inicioproduccion = () => {
               </div>
             ))}
           </div>
-          {selectedItems.map((item: Item, itemIndex: number) => {
-            const key = item.product_code + item.lot;
-            return (
-              <div key={itemIndex} className="fila">
-                <input
-                  className="celda col-1"
-                  value={item.product_code}
-                  readOnly
-                />
-                <input
-                  className="celda col-2"
-                  value={item.description}
-                  readOnly
-                />
-                <input className="celda col-1" value={item.lot} readOnly />
-                <input className="celda col-2" value={item.cum} readOnly />
-                <input
-                  className="celda col-1"
-                  value={new Date(item.expired_date).toLocaleDateString()}
-                  readOnly
-                />
-                <input
-                  className="celda col-2"
-                  value={item.quantity.toString()}
-                  readOnly
-                />
-                <input
-                  className="celda col-1"
-                  value={new Date().toLocaleDateString()}
-                  readOnly
-                />
-                <input
-                  className="celda col-2"
-                  value={`Serial-${itemIndex}`}
-                  readOnly
-                />
-                <div className="celda col-3 contador">
-                  <button onClick={() => decrementQuantity(key)}>-</button>
+          {selectedItems.length === 0 ? (
+            <p className="no-items-message">
+              No hay ningún ítem en producción activa o seleccionado. Regresa a
+              "Nueva Producción" para iniciar una.
+            </p>
+          ) : (
+            selectedItems.map((item: Item, itemIndex: number) => {
+              const key = item.product_code + item.lot;
+              return (
+                <div key={itemIndex} className="fila">
                   <input
-                    type="number"
-                    value={quantities[key]}
-                    onChange={(e) =>
-                      handleQuantityChange(e, key, item.quantity)
-                    }
-                    max={item.quantity} // Establecer el valor máximo en la cantidad
+                    className="celda col-1"
+                    value={item.product_code}
+                    readOnly
                   />
-                  <button onClick={() => incrementQuantity(key, item.quantity)}>
-                    +
-                  </button>
+                  <input
+                    className="celda col-2"
+                    value={item.description}
+                    readOnly
+                  />
+                  <input className="celda col-1" value={item.lot} readOnly />
+                  <input className="celda col-2" value={item.cum} readOnly />
+                  <input
+                    className="celda col-1"
+                    value={new Date(item.expired_date).toLocaleDateString()}
+                    readOnly
+                  />
+                  <input
+                    className="celda col-2"
+                    value={item.quantity.toString()}
+                    readOnly
+                  />
+                  <input
+                    className="celda col-1"
+                    value={new Date(
+                      item.createdate || Date.now()
+                    ).toLocaleDateString()}
+                    readOnly
+                  />
+                  <input
+                    className="celda col-2"
+                    value={`Serial-${item.id || itemIndex}`}
+                    readOnly
+                  />
+                  <div className="celda col-3 contador">
+                    <button onClick={() => decrementQuantity(key)}>-</button>
+                    <input
+                      type="number"
+                      value={quantities[key] || 0}
+                      onChange={(e) =>
+                        handleQuantityChange(e, key, item.quantity)
+                      }
+                      min="0"
+                      max={item.quantity}
+                    />
+                    <button
+                      onClick={() => incrementQuantity(key, item.quantity)}
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
         {showPopup && (
           <div className="popup-overlay">
@@ -235,42 +374,52 @@ const Inicioproduccion = () => {
               <button className="close-button" onClick={handleClosePopup}>
                 X
               </button>
-              <h2>¿Cómo funciona el final de producción?</h2>
+              <h2>¿Cómo funciona el inicio/fin de producción?</h2>
               <p>
-                En esta sección, una vez hayas escogido tu producto, deberás
-                seleccionar su cantidad. <b>RECUERDA</b> no puedes elegir más
-                unidades de las que hay disponibles en inventario.
+                En esta sección, se mostrará el producto que está actualmente en
+                producción o los que seleccionaste. Deberás ajustar el contador
+                a la cantidad de unidades que se han producido. <b>RECUERDA</b>{" "}
+                no puedes elegir más unidades de las que el ítem tenía
+                inicialmente disponibles.
               </p>
             </div>
           </div>
         )}
       </section>
       <div className="contenedor-botones-salir-y-continuar">
-        <button
-          className="boton-continuar-nueva-prudccion"
-          onClick={handlefindeproduccion}
-        >
-          <span>Continuar</span>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 74 74"
-            height="34"
-            width="34"
+        {selectedItems.length > 0 && (
+          <button
+            className="boton-continuar-nueva-prudccion"
+            onClick={handlefindeproduccion}
           >
-            <circle
-              strokeWidth="3"
-              stroke="white"
-              r="35.5"
-              cy="37"
-              cx="37"
-            ></circle>
-            <path
-              fill="white"
-              d="M25 35.5C24.1716 35.5 23.5 36.1716 23.5 37C23.5 37.8284 24.1716 38.5 25 38.5V35.5ZM49.0607 38.0607C49.6464 37.4749 49.6464 36.5251 49.0607 35.9393L39.5147 26.3934C38.9289 25.8076 37.9792 25.8076 37.3934 26.3934C36.8076 26.9792 36.8076 27.9289 37.3934 28.5147L45.8787 37L37.3934 45.4853C36.8076 46.0711 36.8076 47.0208 37.3934 47.6066C37.9792 48.1924 38.9289 48.1924 39.5147 47.6066L49.0607 38.0607ZM25 38.5L48 38.5V35.5L25 35.5V38.5Z"
-            ></path>
-          </svg>
-        </button>
+            <span>Finalizar Producción y Reportar</span>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 74 74"
+              height="34"
+              width="34"
+            >
+              <circle
+                strokeWidth="3"
+                stroke="white"
+                r="35.5"
+                cy="37"
+                cx="37"
+              ></circle>
+              <path
+                fill="white"
+                d="M25 35.5C24.1716 35.5 23.5 36.1716 23.5 37C23.5 37.8284 24.1716 38.5 25 38.5V35.5ZM49.0607 38.0607C49.6464 37.4749 49.6464 36.5251 49.0607 35.9393L39.5147 26.3934C38.9289 25.8076 37.9792 25.8076 37.3934 26.3934C36.8076 26.9792 36.8076 27.9289 37.3934 28.5147L45.8787 37L37.3934 45.4853C36.8076 46.0711 36.8076 47.0208 37.3934 47.6066C37.9792 48.1924 38.9289 48.1924 39.5147 47.6066L49.0607 38.0607ZM25 38.5L48 38.5V35.5L25 35.5V38.5Z"
+              ></path>
+            </svg>
+          </button>
+        )}
+        {selectedItems.length === 0 && (
+          <p className="guidance-message">
+            Si deseas iniciar una nueva producción, por favor regresa a la
+            sección "Nueva Producción".
+          </p>
+        )}
         <div className="styled-wrapper-continuar-nueva-prudccion">
           <button
             className="button-continuar-nueva-prudccion"
@@ -278,7 +427,6 @@ const Inicioproduccion = () => {
           >
             <div className="button-box-continuar-nueva-prudccion">
               <span className="button-elem-continuar-nueva-prudccion">
-                {" "}
                 <svg
                   viewBox="0 0 24 24"
                   xmlns="http://www.w3.org/2000/svg"
@@ -293,7 +441,7 @@ const Inicioproduccion = () => {
               <span className="button-elem-continuar-nueva-prudccion">
                 <svg
                   fill="black"
-                  viewBox="0 0  24 24"
+                  viewBox="0 0 24 24"
                   xmlns="http://www.w3.org/2000/svg"
                   className="arrow-icon-continuar-nueva-prudccion"
                 >
