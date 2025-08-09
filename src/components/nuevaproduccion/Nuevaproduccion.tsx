@@ -30,11 +30,11 @@ const Nuevaproduccion = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const [stockMovements, setStockMovements] = useState<Item[]>([]); // Estado simplificado para solo contener los items
+  const [stockMovements, setStockMovements] = useState<Item[]>([]);
   const [showPopup, setShowPopup] = useState(false);
   const [selectedItems, setSelectedItems] = useState<Item[]>([]);
   const [warningPopup, setWarningPopup] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false); // Para deshabilitar el botón al enviar
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const headers = [
     "Código del producto",
@@ -59,6 +59,7 @@ const Nuevaproduccion = () => {
 
         const productosActivos = response.data
           .flatMap((movimiento: StockMovement) => movimiento.items || [])
+          .filter((item) => item) // <-- CORRECCIÓN APLICADA AQUÍ
           .filter((item: Item) => item.status_prod === true);
 
         setStockMovements(productosActivos);
@@ -79,27 +80,24 @@ const Nuevaproduccion = () => {
     }
   };
 
-  // --- FUNCIÓN ACTUALIZADA ---
   const handleConfirmSelection = async () => {
     if (selectedItems.length === 0) {
       setWarningPopup(true);
       return;
     }
 
-    if (isSubmitting) return; // Prevenir doble clic
+    if (isSubmitting) return;
     setIsSubmitting(true);
 
     const selectedItem = selectedItems[0];
 
     try {
-      // Llamar a la API para registrar el producto como activo
       await axios.post("http://localhost:3000/Products/BIQ/start-production", {
         productCode: selectedItem.product_code,
         lot: selectedItem.lot,
-        source: "item", // Indicamos que viene de la tabla 'item'
+        source: "item",
       });
 
-      // Navegar a la siguiente página solo si la API responde con éxito
       navigate("/inicioproduccion");
     } catch (error) {
       console.error("❌ Error al iniciar la producción:", error);
@@ -109,7 +107,7 @@ const Nuevaproduccion = () => {
         "error"
       );
     } finally {
-      setIsSubmitting(false); // Habilitar el botón de nuevo
+      setIsSubmitting(false);
     }
   };
 

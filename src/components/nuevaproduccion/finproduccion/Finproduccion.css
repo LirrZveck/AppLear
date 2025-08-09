@@ -54,3 +54,38 @@
   font-size: 16px;
   cursor: pointer;
 }
+
+.input-group-cantidades {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.input-item {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  min-width: 200px;
+}
+
+.input-item label {
+  margin-bottom: 8px;
+  font-weight: bold;
+}
+
+.input-item input {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Para pantallas más pequeñas, puedes forzar que cada input ocupe todo el ancho */
+@media (max-width: 950px) {
+  .input-item {
+    flex-basis: 100%;
+  }
+}

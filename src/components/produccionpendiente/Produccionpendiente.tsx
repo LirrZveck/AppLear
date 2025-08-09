@@ -24,9 +24,7 @@ interface Item {
 const Produccionpendiente = () => {
   const [newTableData, setNewTableData] = useState<Item[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-  const [showPopupDeleteConfirm, setShowPopupDeleteConfirm] = useState(false);
   const [showPopupInstructions, setShowPopupInstructions] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
@@ -53,49 +51,8 @@ const Produccionpendiente = () => {
     fetchPendingItems();
   }, []);
 
-  const handleOpenPopupDeleteConfirm = () => setShowPopupDeleteConfirm(true);
   const handleOpenPopupInstructions = () => setShowPopupInstructions(true);
-  const handleClosePopupDeleteConfirm = () => {
-    setShowPopupDeleteConfirm(false);
-    setItemToDelete(null);
-  };
   const handleClosePopupInstructions = () => setShowPopupInstructions(false);
-
-  const confirmDelete = async () => {
-    if (itemToDelete === null) return;
-
-    const selectedItem = newTableData[itemToDelete];
-    setIsSubmitting(true);
-
-    try {
-      const response = await axios.delete(
-        "http://localhost:3000/Products/BIQ/deletePendingItem",
-        {
-          data: {
-            productCode: selectedItem.product_code,
-            lot: selectedItem.lot,
-          },
-        }
-      );
-      Swal.fire(
-        "Éxito",
-        response.data.message || "Producto eliminado correctamente.",
-        "success"
-      );
-      fetchPendingItems();
-      setSelectedIndex(null);
-    } catch (error: any) {
-      console.error("❌ Error eliminando producto:", error);
-      Swal.fire(
-        "Error",
-        error.response?.data?.message || "Error al eliminar el producto.",
-        "error"
-      );
-    } finally {
-      setIsSubmitting(false);
-      handleClosePopupDeleteConfirm();
-    }
-  };
 
   const handleSelectProduct = (index: number) => {
     setSelectedIndex(index);
@@ -117,13 +74,12 @@ const Produccionpendiente = () => {
     const selectedItem = newTableData[selectedIndex];
 
     try {
-      // --- LLAMADA A LA API ACTUALIZADA ---
       const response = await axios.post(
         "http://localhost:3000/Products/BIQ/start-production",
         {
           productCode: selectedItem.product_code,
           lot: selectedItem.lot,
-          source: "pending_item", // <-- CORRECCIÓN APLICADA AQUÍ
+          source: "pending_item",
         }
       );
 
@@ -168,6 +124,7 @@ const Produccionpendiente = () => {
             transform="rotate(0 0 0)"
             onClick={handleOpenPopupInstructions}
           >
+            {/* ... (código del SVG de información sin cambios) ... */}
             <path
               d="M10.9201 9.71229C10.9201 9.11585 11.4036 8.63234 12 8.63234C12.5965 8.63234 13.08 9.11585 13.08 9.71229C13.08 10.078 12.8989 10.4014 12.6182 10.598C12.3475 10.7875 12.0204 11.0406 11.7572 11.3585C11.491 11.68 11.25 12.117 11.25 12.6585C11.25 13.0727 11.5858 13.4085 12 13.4085C12.4142 13.4085 12.75 13.0727 12.75 12.6585C12.75 12.5835 12.7807 12.4743 12.9125 12.3152C13.0471 12.1526 13.2442 11.9908 13.4785 11.8267C14.143 11.3615 14.58 10.588 14.58 9.71229C14.58 8.28742 13.4249 7.13234 12 7.13234C10.5751 7.13234 9.42006 8.28742 9.42006 9.71229C9.42006 10.1265 9.75584 10.4623 10.1701 10.4623C10.5843 10.4623 10.9201 10.1265 10.9201 9.71229Z"
               fill="#383dd5"
@@ -199,7 +156,6 @@ const Produccionpendiente = () => {
                 "Fecha de producción",
                 "Serial",
                 "Seleccionar",
-                "Eliminar",
               ].map((header, index) => (
                 <div key={index} className="celda-header">
                   {header}
@@ -229,16 +185,6 @@ const Produccionpendiente = () => {
                       checked={selectedIndex === index}
                     />
                   </div>
-                  <div className="celda col-1">
-                    <button
-                      className="eliminar-boton"
-                      onClick={() => {
-                        setItemToDelete(index);
-                        handleOpenPopupDeleteConfirm();
-                      }}
-                      disabled={isSubmitting}
-                    ></button>
-                  </div>
                 </div>
               ))
             ) : (
@@ -256,6 +202,7 @@ const Produccionpendiente = () => {
             disabled={isSubmitting || selectedIndex === null}
           >
             <span>Continuar</span>
+            {/* ... (código del SVG de flecha sin cambios) ... */}
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
@@ -282,6 +229,7 @@ const Produccionpendiente = () => {
               onClick={handleExit}
             >
               <div className="button-box-continuar-nueva-prudccion">
+                {/* ... (código del SVG de flecha atrás sin cambios) ... */}
                 <span className="button-elem-continuar-nueva-prudccion">
                   <svg
                     viewBox="0 0 24 24"
@@ -310,37 +258,22 @@ const Produccionpendiente = () => {
         </div>
         {showPopupInstructions && (
           <div className="popup-overlay">
+            {/* ... (código del popup de instrucciones sin cambios) ... */}
             <div className="popup">
               <button
                 className="close-button"
                 onClick={handleClosePopupInstructions}
               >
-                X
+                {" "}
+                X{" "}
               </button>
               <h2>¿Cómo gestiono los productos pendientes?</h2>
               <p>
+                {" "}
                 Selecciona un producto de la lista para marcarlo como activo o
                 eliminarlo. Si lo marcas como activo y haces clic en
-                "Continuar", se moverá a la sección de "Inicio Producción".
+                "Continuar", se moverá a la sección de "Inicio Producción".{" "}
               </p>
-            </div>
-          </div>
-        )}
-        {showPopupDeleteConfirm && (
-          <div className="popup-overlay">
-            <div className="popup">
-              <h2>¿Estás seguro de eliminar esta producción pendiente?</h2>
-              <div className="popup-buttons">
-                <button onClick={confirmDelete} disabled={isSubmitting}>
-                  Sí
-                </button>
-                <button
-                  onClick={handleClosePopupDeleteConfirm}
-                  disabled={isSubmitting}
-                >
-                  No
-                </button>
-              </div>
             </div>
           </div>
         )}

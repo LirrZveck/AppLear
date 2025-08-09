@@ -13,7 +13,7 @@
   font-family: "Lato", sans-serif !important;
   text-align: center;
   border: none;
-  padding: 10px;
+  padding: 2vh;
   box-sizing: border-box;
   flex: 1;
   min-width: 80px;
@@ -21,8 +21,16 @@
   display: flex;
   justify-content: center;
 }
-#celda-nueva-produccion {
-  padding: 0px !important;
+.celdache-checkbox {
+  padding: 1vh !important;
+  margin: 11px;
+  height: 53px;
+  /* top: 20px !important; */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  /* width: 19px !important; */
 }
 .col-1 {
   background-color: #b4c6d7;
